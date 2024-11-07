@@ -1,0 +1,22 @@
+spring:
+  application:
+    name: messenger
+  datasource:
+    url: jdbc:postgresql://localhost:5432/messenger
+    username: xpm
+    password: 1896748249
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+springdoc:
+  swagger-ui:
+    path: /api/swagger/
+    disable-swagger-default-url: true
+  api-docs:
+    path: /api/swagger/docs
+token:
+  signing:
+    key: 413F4428472B4B6250655368566D5970337336763979244226452948404D6351
