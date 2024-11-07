@@ -35,11 +35,8 @@ public class AuthService {
 
     public String authUser(AuthUserDto userDto) {
         User user = this.userService.findUserBy(userDto.getUsername());
-        if (user == null) {
-            throw new ServiceException(String.format("User with login - %s not found!", userDto.getUsername()));
-        }
-        if (!passwordEncoder.matches(userDto.getPassword(), user.getPassword())) {
-            throw new ServiceException("Wrong password!");
+        if (user == null || !passwordEncoder.matches(userDto.getPassword(), user.getPassword())) {
+            throw new ServiceException("Invalid username or password!");
         }
         return this.createToken(userDto);
     }

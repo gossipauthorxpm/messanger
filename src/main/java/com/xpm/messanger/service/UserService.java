@@ -5,6 +5,7 @@ import com.xpm.messanger.entity.User;
 import com.xpm.messanger.exceptions.ServiceException;
 import com.xpm.messanger.repository.UserRepository;
 import com.xpm.messanger.security.jwt.JwtService;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,38 +30,36 @@ public class UserService implements UserDetailsService {
 
     private UserRepository userRepository;
 
-
+    @Transactional
     public User getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (!(authentication instanceof AnonymousAuthenticationToken)) {
+        if (authentication == null || authentication instanceof AnonymousAuthenticationToken) {
+//            ЗАМЕНИТЬ ИСКЛЮЧЕНИЕ НА ДРУГОЙ ТИП
+            throw new ServiceException("Could not determine the current user!");
+        } else {
             String currentUserLogin = authentication.getName();
             return this.findUserBy(currentUserLogin);
-        } else {
-            throw new ServiceException("Could not determine the current user!");
         }
     }
 
+    @Transactional
     public void saveUser(User userForSave) throws ServiceException {
-        try {
-            this.userRepository.findAll().forEach(user -> {
-                if (userForSave.getLogin().equals(user.getLogin())) {
-                    throw new ServiceException(String.format("User with login - %s already exists!", user.getLogin()));
-                }
-                if (userForSave.getEmail().equals(user.getEmail())) {
-                    throw new ServiceException(String.format("User with email - %s already exists!", user.getLogin()));
-                }
-            });
-            this.userRepository.save(userForSave);
-        } catch (TransactionSystemException exception) {
-            throw new ServiceException("Failed to create user!");
+        if (this.userRepository.existsByLogin(userForSave.getLogin())) {
+            throw new ServiceException(String.format("User with login - %s already exists!", userForSave.getLogin()));
         }
+        if (this.userRepository.existsByEmail(userForSave.getEmail())) {
+            throw new ServiceException(String.format("User with email - %s already exists!", userForSave.getEmail()));
+        }
+        this.userRepository.save(userForSave);
     }
 
+    @Transactional
     public User findUserBy(Long id) {
         Optional<User> user = this.userRepository.findById(id);
         return user.orElse(null);
     }
 
+    @Transactional
     public User findUserBy(String login) {
         Optional<User> user = this.userRepository.findUserByLogin(login);
         return user.orElse(null);
